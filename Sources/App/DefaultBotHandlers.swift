@@ -25,7 +25,7 @@ final class DefaultBotHandlers {
             let chatId: TGChatId = .chat(message.chat.id)
 
             let headers: HTTPHeaders = HTTPHeaders([("Authorization", "Bearer \(Environment.get("BEARER_TOKEN")!)")])
-            let url = TwitterApi.getIdByUsername("elonmusk")
+            let url = TwitterApi.getIdByUsername("elonmusk").url
             print(url)
             let uri: URI = URI(string: "https://api.twitter.com/2/users/by/username/elonmusk")
             

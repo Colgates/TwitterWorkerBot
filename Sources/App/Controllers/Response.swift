@@ -1,3 +1,5 @@
+import Foundation
+
 struct Response: Codable {
     let data: DataClass
 }
