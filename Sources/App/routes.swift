@@ -20,7 +20,7 @@ func routes(_ app: Application) throws {
     }
     
     func getUser(request: Request) throws -> EventLoopFuture<Response> {
-        guard let bearerToken: String = Environment.get("BOT_TOKEN") else { throw Abort(.custom(code: 1, reasonPhrase: "No Bearer Token Variable")) }
+        guard let bearerToken: String = Environment.get("BEARER_TOKEN") else { throw Abort(.custom(code: 1, reasonPhrase: "No Bearer Token Variable")) }
         let headers: HTTPHeaders = HTTPHeaders([("Authorization", "Bearer \(bearerToken)")])
         
         let uri: URI = URI(string: "https://api.twitter.com/2/users/by/username/elonmusk")
