@@ -25,6 +25,8 @@ final class DefaultBotHandlers {
             let chatId: TGChatId = .chat(message.chat.id)
 
             let headers: HTTPHeaders = HTTPHeaders([("Authorization", "Bearer \(Environment.get("BEARER_TOKEN")!)")])
+            let url = TwitterApi.getIdByUsername("elonmusk")
+            print(url)
             let uri: URI = URI(string: "https://api.twitter.com/2/users/by/username/elonmusk")
             
             app.client.get(uri, headers: headers).flatMapThrowing { response in
@@ -34,7 +36,7 @@ final class DefaultBotHandlers {
                 
                 do {
                     let data = try JSONDecoder().decode(Response.self, from: data)
-                    let params:TGSendMessageParams = .init(chatId: chatId, text: data.data.name)
+                    let params:TGSendMessageParams = .init(chatId: chatId, text: "\(data.data.name): \(url)")
                     try bot.sendMessage(params: params)
                 } catch {
                     let params:TGSendMessageParams = .init(chatId: chatId, text: "Error")
