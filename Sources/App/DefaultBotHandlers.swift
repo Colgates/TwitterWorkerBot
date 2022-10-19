@@ -13,7 +13,7 @@ final class DefaultBotHandlers {
             guard let message = update.message else { return }
             let chatId: TGChatId = .chat(message.chat.id)
             
-            let params:TGSendMessageParams = .init(chatId: chatId, text: "Working...")
+            let params:TGSendMessageParams = .init(chatId: chatId, text: "Working... \(chatId)")
             try bot.sendMessage(params: params)
         }
         bot.connection.dispatcher.add(handler)
@@ -22,8 +22,7 @@ final class DefaultBotHandlers {
     private static func startHandler(app: Vapor.Application, bot: TGBotPrtcl) {
         let handler = TGMessageHandler(filters: .command.names(["/start"])) { update, bot in
             guard let message = update.message else { return }
-//            let chatId: TGChatId = .chat(message.chat.id)
-            let chatId: TGChatId = .chat(5571035416)
+            let chatId: TGChatId = .chat(message.chat.id)
             let url = TwitterApi.getIdByUsername("elonmusk").url
             
             do {
