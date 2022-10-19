@@ -1,5 +1,14 @@
 import telegram_vapor_bot
 import Vapor
+import Queues
+
+struct CleanupJob: AsyncScheduledJob {
+    // Add extra services here via dependency injection, if you need them.
+
+    func run(context: QueueContext) async throws {
+        // Do some work here, perhaps queue up another job.
+    }
+}
 
 final class DefaultBotHandlers {
     
@@ -21,8 +30,10 @@ final class DefaultBotHandlers {
     
     private static func startHandler(app: Vapor.Application, bot: TGBotPrtcl) {
         let handler = TGMessageHandler(filters: .command.names(["/start"])) { update, bot in
-            guard let message = update.message else { return }
-            let chatId: TGChatId = .chat(message.chat.id)
+//            guard let message = update.message else { return }
+//            let chatId: TGChatId = .chat(message.chat.id)
+            let chatId: TGChatId = .chat(-1001804864589)
+            
             let url = TwitterApi.getIdByUsername("elonmusk").url
             
             do {
