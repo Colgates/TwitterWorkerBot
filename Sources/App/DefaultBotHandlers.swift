@@ -135,6 +135,7 @@ final class DefaultBotHandlers {
                     self.send(text, self.publicChatId, bot, parseMode: .html)
                 }
             }
+            let date = Date()
             
         }
         bot.connection.dispatcher.add(handler)
@@ -147,7 +148,7 @@ final class DefaultBotHandlers {
     private func createHTML(for tweet: Tweet) -> String {
         guard let user = findUser(with: tweet.authorId) else { return "" }
         return """
-            \(user.name) @\(user.username) \(tweet.createdAt.formatted(date: .abbreviated, time: .omitted))
+            \(user.name) @\(user.username) \(tweet.createdAt.getStringFromDate)
             
             \(tweet.text)
             
@@ -184,5 +185,16 @@ final class DefaultBotHandlers {
 
         bot.connection.dispatcher.add(handler)
         bot.connection.dispatcher.add(handler2)
+    }
+}
+
+// Date extension
+extension Date {
+    
+    var getStringFromDate: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        let dateString = dateFormatter.string(from: self)
+        return dateString
     }
 }
