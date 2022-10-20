@@ -87,12 +87,12 @@ final class DefaultBotHandlers {
             
             self.users.remove(at: index)
             
-            let yesButton: TGInlineKeyboardButton = .init(text: "Yes", callbackData: "Yes")
-            let noButton: TGInlineKeyboardButton = .init(text: "No", callbackData: "No")
-            let keyboard:TGInlineKeyboardMarkup = .init(inlineKeyboard: [[yesButton, noButton]])
-            let replyMarkup: TGReplyMarkup = .inlineKeyboardMarkup(keyboard)
+//            let yesButton: TGInlineKeyboardButton = .init(text: "Yes", callbackData: "Yes")
+//            let noButton: TGInlineKeyboardButton = .init(text: "No", callbackData: "No")
+//            let keyboard:TGInlineKeyboardMarkup = .init(inlineKeyboard: [[yesButton, noButton]])
+//            let replyMarkup: TGReplyMarkup = .inlineKeyboardMarkup(keyboard)
             
-            self.send("Deleted successfully.", chatId, bot, replyMarkup: replyMarkup)
+            self.send("Deleted successfully.", chatId, bot)
         }
         bot.connection.dispatcher.add(handler)
     }
@@ -113,7 +113,7 @@ final class DefaultBotHandlers {
                         tweets.append(contentsOf: data.data)
                         let latestTweetId = data.meta.newestID
                         self.users[index].lastTweetId = latestTweetId
-                        print(latestTweetId)
+                        sleep(2)
                         group.leave()
                         print("leave")
                     case .failure(let error):
@@ -130,7 +130,9 @@ final class DefaultBotHandlers {
             group.notify(queue: .global()) {
                 print("notify")
                 tweets.sort { $0.createdAt < $1.createdAt }
+                print(tweets.count)
                 tweets.forEach { tweet in
+                    sleep(1)
                     let text = self.createHTML(for: tweet)
                     self.send(text, self.publicChatId, bot, parseMode: .html)
                 }
