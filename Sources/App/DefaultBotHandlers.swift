@@ -80,18 +80,19 @@ final class DefaultBotHandlers {
             }
 
             username.replaceSelf("/delete ", "")
-            guard let user = self.users.first(where: { $0.name == username }) else {
+            guard let index = self.users.firstIndex(where: { $0.name == username }) else {
                 self.send("Sorry, didn't find any.", chatId, bot)
                 return
             }
+            
+            self.users.remove(at: index)
             
             let yesButton: TGInlineKeyboardButton = .init(text: "Yes", callbackData: "Yes")
             let noButton: TGInlineKeyboardButton = .init(text: "No", callbackData: "No")
             let keyboard:TGInlineKeyboardMarkup = .init(inlineKeyboard: [[yesButton, noButton]])
             let replyMarkup: TGReplyMarkup = .inlineKeyboardMarkup(keyboard)
             
-            self.send("Delete \(user.username)?", chatId, bot, replyMarkup: replyMarkup)
-            
+            self.send("Deleted successfully.", chatId, bot, replyMarkup: replyMarkup)
         }
         bot.connection.dispatcher.add(handler)
     }
