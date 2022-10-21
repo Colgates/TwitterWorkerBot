@@ -32,7 +32,7 @@ enum TwitterApi {
                     URLQueryItem(name: "tweet.fields", value: "created_at,public_metrics,attachments,author_id"),
                     URLQueryItem(name: "expansions", value: "attachments.media_keys,referenced_tweets.id"),
                     URLQueryItem(name: "media.fields", value: "url"),
-                    URLQueryItem(name: "max_results", value: "5"),
+//                     URLQueryItem(name: "max_results", value: "5"),
                 ].customPercentEncoded()
             guard let lastTweet = user.lastTweetId else { return queryItems }
             queryItems.append(URLQueryItem(name: "since_id", value: lastTweet))
@@ -42,7 +42,7 @@ enum TwitterApi {
 }
 
 // MARK: - Extensions
-
+// There were commas in url after adding queryitems, it's fine server get it, but it looks strange. Myabe I will find more elegant way to set it up 
 extension URLQueryItem {
     func customPercentEncoded() -> URLQueryItem {
         var newQueryItem = self
