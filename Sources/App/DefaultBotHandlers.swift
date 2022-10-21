@@ -146,7 +146,7 @@ final class DefaultBotHandlers {
     }
     
     private func createHTML(for tweet: Tweet) -> String {
-        guard let user = users.first { $0.id == tweet.authorId } else { return "" }
+        guard let user = findUser(with:tweet.authorId) else { return "" }
         return """
             \(user.name) @\(user.username) \(tweet.createdAt.getStringFromDate)
             
