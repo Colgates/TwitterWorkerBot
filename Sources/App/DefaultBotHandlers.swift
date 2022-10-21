@@ -113,7 +113,7 @@ final class DefaultBotHandlers {
                         tweets.append(contentsOf: data.data)
                         let latestTweetId = data.meta.newestID
                         self.users[index].lastTweetId = latestTweetId
-                        sleep(2)
+                        sleep(5)
                         group.leave()
                         print("leave")
                     case .failure(let error):
@@ -132,13 +132,11 @@ final class DefaultBotHandlers {
                 tweets.sort { $0.createdAt < $1.createdAt }
                 print(tweets.count)
                 tweets.forEach { tweet in
-                    sleep(1)
+                    sleep(2)
                     let text = self.createHTML(for: tweet)
                     self.send(text, self.publicChatId, bot, parseMode: .html)
                 }
             }
-            let date = Date()
-            
         }
         bot.connection.dispatcher.add(handler)
     }
@@ -148,7 +146,7 @@ final class DefaultBotHandlers {
     }
     
     private func createHTML(for tweet: Tweet) -> String {
-        guard let user = findUser(with: tweet.authorId) else { return "" }
+        guard let user = users.first { $0.id == tweet.authorId } else { return "" }
         return """
             \(user.name) @\(user.username) \(tweet.createdAt.getStringFromDate)
             
