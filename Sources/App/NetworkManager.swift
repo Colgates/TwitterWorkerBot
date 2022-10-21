@@ -36,6 +36,7 @@ class NetworkManager: NetworkService {
                     completion(.success(data))
                     
                 } catch {
+                    print(error)
                     completion(.failure(Abort(.custom(code: 3, reasonPhrase: "Failed decoding JSON"))))
                 }
                 

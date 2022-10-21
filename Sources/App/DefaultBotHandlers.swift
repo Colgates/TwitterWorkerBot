@@ -22,6 +22,8 @@ final class DefaultBotHandlers {
         checkHandler(app: app, bot: bot)
         deleteUserHandler(app: app, bot: bot)
         getTweetsHandler(app: app, bot: bot)
+        createHandler(app: app, bot: bot)
+        getHandler(app: app, bot: bot)
     }
 
     private func addUserHandler(app: Vapor.Application, bot: TGBotPrtcl) {
@@ -141,6 +143,49 @@ final class DefaultBotHandlers {
         bot.connection.dispatcher.add(handler)
     }
     
+    private func createHandler(app: Vapor.Application, bot: TGBotPrtcl) {
+        let handler = TGMessageHandler(filters: .command.names(["/create"])) { update, bot in
+//            guard let message = update.message else {
+//                print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
+//                return
+//            }
+//            let chatId:TGChatId = .chat(message.chat.id)
+            let user = UserDB(userId: "44196397", name: "Elon Musk", username: "elonmusk", lastTweetId: "44196397")
+            let user2 = UserDB(userId: "84765873658", name: "Pelon Mask", username: "elonmusk", lastTweetId: "44196397")
+            let result = user.create(on: app.db).map { user }
+            let result2 = user2.create(on: app.db).map { user }
+            
+        }
+        bot.connection.dispatcher.add(handler)
+    }
+    
+    private func getHandler(app: Vapor.Application, bot: TGBotPrtcl) {
+        let handler = TGMessageHandler(filters: .command.names(["/get"])) { update, bot in
+//            guard let message = update.message else {
+//                print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
+//                return
+//            }
+//            let chatId:TGChatId = .chat(message.chat.id)
+            let users = UserDB.query(on: app.db).all()
+            users.whenComplete { result in
+                switch result {
+                case .success(let users):
+                    users.forEach { user in
+                        print(user.name)
+                    }
+                case .failure(let failure):
+                    print(failure)
+                }
+            }
+            
+
+        }
+        bot.connection.dispatcher.add(handler)
+    }
+}
+
+// MARK: - Helpers
+extension DefaultBotHandlers {
     func findUser(with id: String) -> User? {
         return users.first { $0.id == id }
     }
