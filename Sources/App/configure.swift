@@ -8,9 +8,7 @@ public func configure(_ app: Application) throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
-//    try app.databases.use(.postgres(url: "postgres://users_q3jw_user:cAYB07ASH4zJp4uuNuu7MgilVgV808fv@dpg-cd94ibun6mpi3erjcomg-a.frankfurt-postgres.render.com/users_q3jw"), as: .psql)
-//    PGPASSWORD=PRJFgJW0lINaituhTKtd psql -h containers-us-west-105.railway.app -U postgres -p 7694 -d railway
-    app.databases.use(.postgres(hostname: "containers-us-west-105.railway.app", username: "postgres", password: "PRJFgJW0lINaituhTKtd"), as: .psql)
+    try app.databases.use(.postgres(url: Environment.get("DB_URL")!), as: .psql)
     app.migrations.add(CreateUser())
     guard let tgApi: String = Environment.get("BOT_TOKEN") else { throw Abort(.custom(code: 1, reasonPhrase: "No Token Variable")) }
  
