@@ -48,9 +48,7 @@ final class DefaultBotHandlers {
             self.networkManager.getResourceOf(type: UsersResponse.self, for: url) { result in
                 switch result {
                 case .success(let response):
-                    self.databaseManager.addUser(response.data) { message in
-                        self.send(message, chatId, bot)
-                    }
+                    self.databaseManager.addUser(response.data) { self.send($0, chatId, bot) }
                 case .failure(let error):
                     print(error)
                     self.send("Sorry couldn't find anyone.", chatId, bot)
@@ -65,7 +63,12 @@ final class DefaultBotHandlers {
             guard let message = update.message else { return }
             let chatId: TGChatId = .chat(message.chat.id)
             
-            let params:TGSendMessageParams = .init(chatId: chatId, text: "Working... Users: \(self.databaseManager.users.count)")
+            var text: String = "Working..."
+            for index in 0..<self.databaseManager.users.count {
+                text += "\n\(index + 1). \(self.databaseManager.users[index].name)"
+            }
+             
+            let params:TGSendMessageParams = .init(chatId: chatId, text: text)
             try bot.sendMessage(params: params)
         }
         bot.connection.dispatcher.add(handler)
@@ -86,9 +89,7 @@ final class DefaultBotHandlers {
 
             username.replaceSelf("/delete ", "")
             
-            self.databaseManager.deleteUser(with: username) { message in
-                self.send(message, chatId, bot)
-            }
+            self.databaseManager.deleteUser(with: username) { self.send($0, chatId, bot)}
         }
         bot.connection.dispatcher.add(handler)
     }
@@ -109,6 +110,8 @@ final class DefaultBotHandlers {
                         
                         tweets.append(contentsOf: response.data)
                         let newestID = response.meta.newestID
+                        
+                        self.databaseManager.users[index].lastTweetId = newestID
                         self.databaseManager.updateLastTweet(user, id: newestID)
 
                         sleep(5)
@@ -127,13 +130,7 @@ final class DefaultBotHandlers {
             
             group.notify(queue: .global()) {
                 print("notify")
-                tweets.sort { $0.createdAt < $1.createdAt }
-                print(tweets.count)
-                tweets.forEach { tweet in
-                    sleep(2)
-                    let text = self.createHTML(for: tweet)
-                    self.send(text, self.publicChatId, bot, parseMode: .html)
-                }
+                self.publish(tweets)
             }
         }
         bot.connection.dispatcher.add(handler)
@@ -142,15 +139,28 @@ final class DefaultBotHandlers {
     private func refreshHandler(app: Vapor.Application, bot: TGBotPrtcl) {
         let handler = TGMessageHandler(filters: .command.names(["/refresh"])) { update, bot in
 
+            guard let message = update.message else {
+                print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
+                return
+            }
+            let chatId:TGChatId = .chat(message.chat.id)
+            
             self.databaseManager.refresh()
+            
+            self.databaseManager.users.forEach { self.send($0.lastTweetId ?? "nil", chatId, bot) }
         }
         bot.connection.dispatcher.add(handler)
     }
     
     private func deleteAllHandler(app: Vapor.Application, bot: TGBotPrtcl) {
         let handler = TGMessageHandler(filters: .command.names(["/deleteAll"])) { update, bot in
+            guard let message = update.message else {
+                print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
+                return
+            }
+            let chatId:TGChatId = .chat(message.chat.id)
 
-            self.databaseManager.deleteAll()
+            self.databaseManager.deleteAll { self.send($0, chatId, bot)}
         }
         bot.connection.dispatcher.add(handler)
     }
@@ -168,7 +178,17 @@ extension DefaultBotHandlers {
             """
     }
     
-    func send(_ text: String, _ chatId: TGChatId, _ bot: TGBotPrtcl, parseMode: TGParseMode? = nil, disableWebPagePreview: Bool? = false, _ replyToMessageId: Int? = nil, replyMarkup: TGReplyMarkup? = nil) {
+    private func publish(_ tweets: [Tweet]) {
+        var tweets = tweets.sorted { $0.createdAt < $1.createdAt }
+        print(tweets.count)
+        tweets.forEach { tweet in
+            sleep(2)
+            let text = self.createHTML(for: tweet)
+            self.send(text, self.publicChatId, bot, parseMode: .html)
+        }
+    }
+    
+    private func send(_ text: String, _ chatId: TGChatId, _ bot: TGBotPrtcl, parseMode: TGParseMode? = nil, disableWebPagePreview: Bool? = false, _ replyToMessageId: Int? = nil, replyMarkup: TGReplyMarkup? = nil) {
         do {
             let params: TGSendMessageParams = .init(chatId: chatId, text: text, parseMode: parseMode, disableWebPagePreview: disableWebPagePreview, replyToMessageId: replyToMessageId, replyMarkup: replyMarkup)
             try bot.sendMessage(params: params)
@@ -205,11 +225,3 @@ extension DefaultBotHandlers {
         bot.connection.dispatcher.add(handler2)
     }
 }
-
-
-
-//{
-//    "meta": {
-//        "result_count": 0
-//    }
-//}
