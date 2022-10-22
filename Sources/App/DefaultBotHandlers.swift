@@ -2,9 +2,8 @@ import telegram_vapor_bot
 import Vapor
 
 final class DefaultBotHandlers {
-//    private var users: [User] = []
     
-    private let publicChatId: TGChatId = .chat(-1001804864589)
+    private let publicChatId: TGChatId = .chat(Application.publicChatId)
     
     private let app: Application
     private let bot: TGBot
@@ -29,7 +28,7 @@ final class DefaultBotHandlers {
     }
 
     private func addUserHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/add"])) { update, bot in
+        let handler = TGMessageHandler(filters: .command.names([Command.add.name])) { update, bot in
             guard let message = update.message else {
                 print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
                 return
@@ -59,7 +58,7 @@ final class DefaultBotHandlers {
     }
     
     private func checkHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/check"])) { update, bot in
+        let handler = TGMessageHandler(filters: .command.names([Command.check.name])) { update, bot in
             guard let message = update.message else { return }
             let chatId: TGChatId = .chat(message.chat.id)
             
@@ -75,7 +74,7 @@ final class DefaultBotHandlers {
     }
     
     private func deleteUserHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/delete"])) { update, bot in
+        let handler = TGMessageHandler(filters: .command.names([Command.delete.name])) { update, bot in
             guard let message = update.message else {
                 print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
                 return
@@ -95,7 +94,7 @@ final class DefaultBotHandlers {
     }
     
     private func getTweetsHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/getTweets"])) { update, bot in
+        let handler = TGMessageHandler(filters: .command.names([Command.getTweets.name])) { update, bot in
             guard let message = update.message else {
                 print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
                 return
@@ -144,7 +143,7 @@ final class DefaultBotHandlers {
     }
     
     private func refreshHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/refresh"])) { update, bot in
+        let handler = TGMessageHandler(filters: .command.names([Command.refresh.name])) { update, bot in
 
             guard let message = update.message else {
                 print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
@@ -160,7 +159,7 @@ final class DefaultBotHandlers {
     }
     
     private func deleteAllHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/deleteAll"])) { update, bot in
+        let handler = TGMessageHandler(filters: .command.names([Command.deleteAll.name])) { update, bot in
             guard let message = update.message else {
                 print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
                 return
@@ -186,9 +185,8 @@ extension DefaultBotHandlers {
     }
     
     private func publish(_ tweets: [Tweet]) {
-        var tweets = tweets.sorted { $0.createdAt < $1.createdAt }
-        print(tweets.count)
-        tweets.forEach { tweet in
+        var tweetsSorted = tweets.sorted { $0.createdAt < $1.createdAt }
+        tweetsSorted.forEach { tweet in
             sleep(2)
             let text = self.createHTML(for: tweet)
             self.send(text, self.publicChatId, bot, parseMode: .html)
