@@ -2,7 +2,7 @@ import Vapor
 
 enum TwitterApi {
     case getIdByUsername(String)
-    case getTweetsForUserIdSince(User)
+    case getTweetsForUserIdSince(UserDB)
     
     var url: URL? {
         var components = URLComponents()
@@ -18,7 +18,7 @@ enum TwitterApi {
         case .getIdByUsername(let username):
             return "/2/users/by/username/\(username)"
         case .getTweetsForUserIdSince(let user):
-            return "/2/users/\(user.id)/tweets"
+            return "/2/users/\(user.userId)/tweets"
         }
     }
 
@@ -32,7 +32,7 @@ enum TwitterApi {
                     URLQueryItem(name: "tweet.fields", value: "created_at,public_metrics,attachments,author_id"),
                     URLQueryItem(name: "expansions", value: "attachments.media_keys,referenced_tweets.id"),
                     URLQueryItem(name: "media.fields", value: "url"),
-//                     URLQueryItem(name: "max_results", value: "5"),
+                    URLQueryItem(name: "max_results", value: "5"),
                 ].customPercentEncoded()
             guard let lastTweet = user.lastTweetId else { return queryItems }
             queryItems.append(URLQueryItem(name: "since_id", value: lastTweet))

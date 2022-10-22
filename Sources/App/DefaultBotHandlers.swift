@@ -2,18 +2,20 @@ import telegram_vapor_bot
 import Vapor
 
 final class DefaultBotHandlers {
-    private var users: [User] = []
+//    private var users: [User] = []
     
     private let publicChatId: TGChatId = .chat(-1001804864589)
     
     private let app: Application
     private let bot: TGBot
     private let networkManager: NetworkService
+    private let databaseManager: DatabaseService
     
-    init(app: Application, bot: TGBot, networkManager: NetworkService) {
+    init(app: Application, bot: TGBot, _ networkManager: NetworkService, _ databaseManager: DatabaseService) {
         self.app = app
         self.bot = bot
         self.networkManager = networkManager
+        self.databaseManager = databaseManager
         addHandlers(app: app, bot: bot)
     }
     
@@ -22,8 +24,8 @@ final class DefaultBotHandlers {
         checkHandler(app: app, bot: bot)
         deleteUserHandler(app: app, bot: bot)
         getTweetsHandler(app: app, bot: bot)
-        createHandler(app: app, bot: bot)
-        getHandler(app: app, bot: bot)
+        refreshHandler(app: app, bot: bot)
+        deleteAllHandler(app: app, bot: bot)
     }
 
     private func addUserHandler(app: Vapor.Application, bot: TGBotPrtcl) {
@@ -43,11 +45,12 @@ final class DefaultBotHandlers {
 
             let url = TwitterApi.getIdByUsername(username).url
 
-            self.networkManager.getResourceOf(type: UsersResponse.self, for: url, app: app) { result in
+            self.networkManager.getResourceOf(type: UsersResponse.self, for: url) { result in
                 switch result {
                 case .success(let response):
-                    self.users.append(response.data)
-                    self.send("\(response.data.name) succefully added.", chatId, bot)
+                    self.databaseManager.addUser(response.data) { message in
+                        self.send(message, chatId, bot)
+                    }
                 case .failure(let error):
                     print(error)
                     self.send("Sorry couldn't find anyone.", chatId, bot)
@@ -62,7 +65,7 @@ final class DefaultBotHandlers {
             guard let message = update.message else { return }
             let chatId: TGChatId = .chat(message.chat.id)
             
-            let params:TGSendMessageParams = .init(chatId: chatId, text: "Working... Users: \(self.users)")
+            let params:TGSendMessageParams = .init(chatId: chatId, text: "Working... Users: \(self.databaseManager.users.count)")
             try bot.sendMessage(params: params)
         }
         bot.connection.dispatcher.add(handler)
@@ -82,19 +85,10 @@ final class DefaultBotHandlers {
             }
 
             username.replaceSelf("/delete ", "")
-            guard let index = self.users.firstIndex(where: { $0.name == username }) else {
-                self.send("Sorry, didn't find any.", chatId, bot)
-                return
+            
+            self.databaseManager.deleteUser(with: username) { message in
+                self.send(message, chatId, bot)
             }
-            
-            self.users.remove(at: index)
-            
-//            let yesButton: TGInlineKeyboardButton = .init(text: "Yes", callbackData: "Yes")
-//            let noButton: TGInlineKeyboardButton = .init(text: "No", callbackData: "No")
-//            let keyboard:TGInlineKeyboardMarkup = .init(inlineKeyboard: [[yesButton, noButton]])
-//            let replyMarkup: TGReplyMarkup = .inlineKeyboardMarkup(keyboard)
-            
-            self.send("Deleted successfully.", chatId, bot)
         }
         bot.connection.dispatcher.add(handler)
     }
@@ -104,17 +98,19 @@ final class DefaultBotHandlers {
 
             var tweets:[Tweet] = []
             let group = DispatchGroup()
-            for index in 0..<self.users.count {
+            for index in 0..<self.databaseManager.users.count {
                 group.enter()
                 print("enter")
-                let user = self.users[index]
+                let user = self.databaseManager.users[index]
                 let url = TwitterApi.getTweetsForUserIdSince(user).url
-                self.networkManager.getResourceOf(type: TweetsResponse.self, for: url, app: app) { result in
+                self.networkManager.getResourceOf(type: TweetsResponse.self, for: url) { result in
                     switch result {
-                    case .success(let data):
-                        tweets.append(contentsOf: data.data)
-                        let latestTweetId = data.meta.newestID
-                        self.users[index].lastTweetId = latestTweetId
+                    case .success(let response):
+                        
+                        tweets.append(contentsOf: response.data)
+                        let newestID = response.meta.newestID
+                        self.databaseManager.updateLastTweet(user, id: newestID)
+
                         sleep(5)
                         group.leave()
                         print("leave")
@@ -143,42 +139,18 @@ final class DefaultBotHandlers {
         bot.connection.dispatcher.add(handler)
     }
     
-    private func createHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/create"])) { update, bot in
-//            guard let message = update.message else {
-//                print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
-//                return
-//            }
-//            let chatId:TGChatId = .chat(message.chat.id)
-            let user = UserDB(userId: "44196397", name: "Elon Musk", username: "elonmusk", lastTweetId: "44196397")
-            let user2 = UserDB(userId: "84765873658", name: "Pelon Mask", username: "elonmusk", lastTweetId: "44196397")
-            let result = user.create(on: app.db).map { user }
-            let result2 = user2.create(on: app.db).map { user }
-            
+    private func refreshHandler(app: Vapor.Application, bot: TGBotPrtcl) {
+        let handler = TGMessageHandler(filters: .command.names(["/refresh"])) { update, bot in
+
+            self.databaseManager.refresh()
         }
         bot.connection.dispatcher.add(handler)
     }
     
-    private func getHandler(app: Vapor.Application, bot: TGBotPrtcl) {
-        let handler = TGMessageHandler(filters: .command.names(["/get"])) { update, bot in
-//            guard let message = update.message else {
-//                print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
-//                return
-//            }
-//            let chatId:TGChatId = .chat(message.chat.id)
-            let users = UserDB.query(on: app.db).all()
-            users.whenComplete { result in
-                switch result {
-                case .success(let users):
-                    users.forEach { user in
-                        print(user.name)
-                    }
-                case .failure(let failure):
-                    print(failure)
-                }
-            }
-            
+    private func deleteAllHandler(app: Vapor.Application, bot: TGBotPrtcl) {
+        let handler = TGMessageHandler(filters: .command.names(["/deleteAll"])) { update, bot in
 
+            self.databaseManager.deleteAll()
         }
         bot.connection.dispatcher.add(handler)
     }
@@ -186,12 +158,8 @@ final class DefaultBotHandlers {
 
 // MARK: - Helpers
 extension DefaultBotHandlers {
-    func findUser(with id: String) -> User? {
-        return users.first { $0.id == id }
-    }
-    
     private func createHTML(for tweet: Tweet) -> String {
-        guard let user = findUser(with:tweet.authorId) else { return "" }
+        guard let user = databaseManager.findUserWith(id: tweet.authorId) else { return "" }
         return """
             \(user.name) @\(user.username) \(tweet.createdAt.getStringFromDate)
             
@@ -207,6 +175,11 @@ extension DefaultBotHandlers {
         } catch {
             print(Abort(.custom(code: 5, reasonPhrase: "Bot failed to send a message. \(error.localizedDescription)")))
         }
+        
+        //            let yesButton: TGInlineKeyboardButton = .init(text: "Yes", callbackData: "Yes")
+        //            let noButton: TGInlineKeyboardButton = .init(text: "No", callbackData: "No")
+        //            let keyboard:TGInlineKeyboardMarkup = .init(inlineKeyboard: [[yesButton, noButton]])
+        //            let replyMarkup: TGReplyMarkup = .inlineKeyboardMarkup(keyboard)
     }
     
     private func createButtonsActionHandler(app: Application, bot: TGBotPrtcl) {
@@ -233,13 +206,10 @@ extension DefaultBotHandlers {
     }
 }
 
-// Date extension
-extension Date {
-    
-    var getStringFromDate: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy"
-        let dateString = dateFormatter.string(from: self)
-        return dateString
-    }
-}
+
+
+//{
+//    "meta": {
+//        "result_count": 0
+//    }
+//}

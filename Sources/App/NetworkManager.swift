@@ -1,12 +1,18 @@
 import Vapor
 
 protocol NetworkService {
-    func getResourceOf<T:Codable>(type: T.Type, for url: URL?, app: Vapor.Application, completion: @escaping (Result<T, Error>) -> Void)
+    func getResourceOf<T:Codable>(type: T.Type, for url: URL?, completion: @escaping (Result<T, Error>) -> Void)
 }
 
-class NetworkManager: NetworkService {
+final class NetworkManager: NetworkService {
     
-    func getResourceOf<T:Codable>(type: T.Type, for url: URL?, app: Vapor.Application, completion: @escaping (Result<T, Error>) -> Void) {
+    private let app: Application
+    
+    init(app: Application) {
+        self.app = app
+    }
+    
+    func getResourceOf<T:Codable>(type: T.Type, for url: URL?, completion: @escaping (Result<T, Error>) -> Void) {
         
         guard let urlString = url?.absoluteString else {
             return completion(.failure(Abort(.custom(code: 1, reasonPhrase: "Couldn't convert url to string"))))
