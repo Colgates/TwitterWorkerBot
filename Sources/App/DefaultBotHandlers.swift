@@ -96,7 +96,12 @@ final class DefaultBotHandlers {
     
     private func getTweetsHandler(app: Vapor.Application, bot: TGBotPrtcl) {
         let handler = TGMessageHandler(filters: .command.names(["/getTweets"])) { update, bot in
-
+            guard let message = update.message else {
+                print(Abort(.custom(code: 5, reasonPhrase: "Message is nil.")))
+                return
+            }
+            let chatId:TGChatId = .chat(message.chat.id)
+            
             var tweets:[Tweet] = []
             let group = DispatchGroup()
             for index in 0..<self.databaseManager.users.count {
@@ -107,7 +112,7 @@ final class DefaultBotHandlers {
                 self.networkManager.getResourceOf(type: TweetsResponse.self, for: url) { result in
                     switch result {
                     case .success(let response):
-                        
+                        self.send("Got \(user.name)'s tweets.", chatId, bot)
                         tweets.append(contentsOf: response.data)
                         let newestID = response.meta.newestID
                         
@@ -118,6 +123,7 @@ final class DefaultBotHandlers {
                         group.leave()
                         print("leave")
                     case .failure(let error):
+                        self.send("\(user.name)'s got nothing new or some error appear.", chatId, bot)
                         print(error)
                         group.leave()
                         print("leave")
@@ -130,6 +136,7 @@ final class DefaultBotHandlers {
             
             group.notify(queue: .global()) {
                 print("notify")
+                self.send("Okay, publishing tweets. Got: \(tweets.count).", chatId, bot)
                 self.publish(tweets)
             }
         }
