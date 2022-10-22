@@ -118,7 +118,7 @@ final class DefaultBotHandlers {
                         self.databaseManager.users[index].lastTweetId = newestID
                         self.databaseManager.updateLastTweet(user, id: newestID)
 
-                        sleep(5)
+                        sleep(3)
                         group.leave()
                         print("leave")
                     case .failure(let error):
@@ -135,7 +135,7 @@ final class DefaultBotHandlers {
             
             group.notify(queue: .global()) {
                 print("notify")
-                self.send("Okay, publishing tweets. Got: \(tweets.count).", chatId, bot)
+                self.send("Okay, publishing tweets: \(tweets.count).", chatId, bot)
                 self.publish(tweets)
             }
         }
@@ -187,7 +187,7 @@ extension DefaultBotHandlers {
     private func publish(_ tweets: [Tweet]) {
         var tweetsSorted = tweets.sorted { $0.createdAt < $1.createdAt }
         tweetsSorted.forEach { tweet in
-            sleep(2)
+            sleep(3)
             let text = self.createHTML(for: tweet)
             self.send(text, self.publicChatId, bot, parseMode: .html)
         }
