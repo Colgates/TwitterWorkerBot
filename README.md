@@ -21,20 +21,19 @@ Written with:
 2. Deploy PostgreSQL database
 3. Enter environment variables
 
-###
-Commands:
-/add (username)- Add user to database
-/check - Check the state of bot and users in database
-/delete (username)- Delete user from database
-/deleteall - Delete all users from database
-/gettweets - Get the tweets and publish them to the chat
-/refresh - sets newestTweet variables to nil, so you can post last tweets again
+### Commands:
+- /add (username)- Add user to database
+- /check - Check the state of bot and users in database
+- /delete (username)- Delete user from database
+- /deleteall - Delete all users from database
+- /gettweets - Get the tweets and publish them to the chat
+- /refresh - sets newestTweet variables to nil, so you can post last tweets again
 
-##ToDos:
-1.Implement a scheduler, for now you can fetch new tweets manually, by /gettweets command. 
-2.Although the bot makes requests to twitter for each user in the list in between and then posts messages at a rate of one message per second, it still throws an error: Too many requests. Trying to figure it out
+### ToDos:
+- 1.Implement a scheduler, for now you can fetch new tweets manually, by /gettweets command. 
+- 2.Although the bot makes requests to twitter for each user in the list in between and then posts messages at a rate of one message per second, it still throws an error: Too many requests. Trying to figure it out
 
-#Important:
+# Important:
 If you decide to deploy your PostgreSQL on render.com and getting an error like: 
 "[Code: "28000", Message: "SSL/TLS required", Localized Severity: "FATAL"])))" 
 Solution:
