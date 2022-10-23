@@ -30,11 +30,11 @@ Written with:
 - /refresh - sets newestTweet variables to nil, so you can post last tweets again
 
 ### ToDos:
-- 1.Implement a scheduler, for now you can fetch new tweets manually, by /gettweets command. 
-- 2.Although the bot makes requests to twitter for each user in the list in between and then posts messages at a rate of one message per second, it still throws an error: Too many requests. Trying to figure it out
+1. Implement a scheduler, for now you can fetch new tweets manually, by /gettweets command. 
+2. Although the bot makes requests to twitter for each user in the list in between and then posts messages at a rate of one message per second, it still throws an error: Too many requests. Trying to figure it out
 
-# Important:
+## Important:
 If you decide to deploy your PostgreSQL on render.com and getting an error like: 
 "[Code: "28000", Message: "SSL/TLS required", Localized Severity: "FATAL"])))" 
-Solution:
+
 - add to your DB_URL '?ssl=true'
