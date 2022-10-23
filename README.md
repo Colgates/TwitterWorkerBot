@@ -2,12 +2,12 @@
 
 # TwitterWorkerBot
 
-Hobby project to get tweets from Tweeter and post it to the channell in Telegram  
+Hobby project to get tweets from Tweeter and post it to the channel in Telegram  
 
 Written with:
 - Swift
 - VAPOR
-- Telegram Vapor Bot, thanks to [nerzh OleG](https://github.com/nerzh/telegram-vapor-bot) for the library.
+- Telegram Vapor Bot, thanks to Oleh Hudeichuk for the library ([Telegram Vapor Bot](https://github.com/nerzh/telegram-vapor-bot)).
 - PostgreSQL
  
 ### Installing requirements
